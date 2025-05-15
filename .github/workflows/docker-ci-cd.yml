@@ -17,20 +17,22 @@ jobs:
           fetch-depth: 0  # Shallow clones should be disabled for better relevancy of analysis
       
       - name: SonarCloud Scan for Backend
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarqube-scan-action@master
         with:
           projectBaseDir: backendd
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Nécessaire pour l'analyse des PR
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
           
       - name: SonarCloud Scan for Frontend
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarqube-scan-action@master
         with:
           projectBaseDir: TechnoMstr
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
 
   build-and-push:
     runs-on: ubuntu-latest
