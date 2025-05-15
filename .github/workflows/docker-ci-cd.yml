@@ -14,34 +14,33 @@ permissions:
   id-token: write
 
 jobs:
-  # Commenté temporairement pour déboguer le pipeline
-  # sonarcloud-analysis:
-  #   name: SonarCloud Analysis
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v3
-  #       with:
-  #         fetch-depth: 0  # Shallow clones should be disabled for better relevancy of analysis
-  #     
-  #     - name: SonarCloud Scan
-  #       uses: SonarSource/sonarqube-scan-action@master
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Nécessaire pour l'analyse des PR
-  #         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-  #         SONAR_HOST_URL: https://sonarcloud.io
-  #         
-  #     - name: Affichage du job SonarCloud
-  #       run: |
-  #         echo "========================================="
-  #         echo "L'analyse SonarCloud est terminée"
-  #         echo "Vérifiez les résultats sur SonarCloud.io"
-  #         echo "========================================="
-  #         sleep 10
+  sonarcloud-analysis:
+    name: SonarCloud Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for better relevancy of analysis
+      
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Nécessaire pour l'analyse des PR
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
+          
+      - name: Affichage du job SonarCloud
+        run: |
+          echo "=========================================="
+          echo "L'analyse SonarCloud est terminée"
+          echo "Vérifiez les résultats sur SonarCloud.io"
+          echo "=========================================="
+          sleep 10
 
   security-scan:
     runs-on: ubuntu-latest
-    # needs: sonarcloud-analysis
+    needs: sonarcloud-analysis
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -80,7 +79,7 @@ jobs:
 
   build-and-push:
     runs-on: ubuntu-latest
-    needs: security-scan  # Assure que le scan de sécurité est terminé avant de pousser
+    needs: [sonarcloud-analysis, security-scan]  # Assure que l'analyse et le scan sont terminés avant de pousser
     
     steps:
     - name: Checkout repository
