@@ -1,4 +1,4 @@
-name: Docker CI/CD Pipeline
+name: Docker CI/CD Pipeline with SonarCloud
 
 on:
   push:
@@ -7,8 +7,34 @@ on:
     branches: [ main ]
 
 jobs:
+  sonarcloud-analysis:
+    name: SonarCloud Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for better relevancy of analysis
+      
+      - name: SonarCloud Scan for Backend
+        uses: SonarSource/sonarcloud-github-action@master
+        with:
+          projectBaseDir: backendd
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Nécessaire pour l'analyse des PR
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          
+      - name: SonarCloud Scan for Frontend
+        uses: SonarSource/sonarcloud-github-action@master
+        with:
+          projectBaseDir: TechnoMstr
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
   build-and-push:
     runs-on: ubuntu-latest
+    needs: sonarcloud-analysis  # Assure que l'analyse est terminée avant de construire
     
     steps:
     - name: Checkout repository
