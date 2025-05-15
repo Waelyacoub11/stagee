@@ -204,7 +204,7 @@ onMounted(() => {
     selectedBase.value = availableBases.value[0]
   }
 
-  axios.get("http://localhost:3000/api/equipements")
+  axios.get("http://localhost:5000/api/equipements")
     .then(response => {
       let allEquipments = [];
       if (Array.isArray(response.data.techno1)) {

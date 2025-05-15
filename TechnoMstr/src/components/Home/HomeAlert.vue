@@ -68,7 +68,7 @@
               <div>
                 <div class="text-xl text-red-600 mb-2">❌</div>
                 <h3 class="font-bold text-xs text-red-800 mb-2">
-                  Équipement #{{ alert.idequipement }}
+                  {{ alert.modele || 'Équipement inconnu' }}
                 </h3>
                 <p class="text-sm text-gray-800 mb-2">
                   {{ alert.description || "Aucune description disponible." }}
@@ -111,7 +111,7 @@
               <div>
                 <div class="text-xl text-yellow-500 mb-2">⚠️</div>
                 <h3 class="font-bold text-xs text-yellow-800 mb-2">
-                  Équipement #{{ alert.idequipement }}
+                  {{ alert.modele || 'Équipement inconnu' }}
                 </h3>
                 <p class="text-sm text-gray-800 mb-2">
                   {{ alert.description || "Aucune description disponible." }}
@@ -272,7 +272,7 @@ const reloadCharts = () => {
 const fetchEquipments = async () => {
   try {
     isLoadingEquipments.value = true;
-    const response = await axios.get("http://localhost:3000/api/equipements");
+    const response = await axios.get("http://localhost:5000/api/equipements");
     equipments.value = response.data;
 
     // Sélectionner la première technologie par défaut si elle existe
@@ -454,7 +454,7 @@ const removeNewBadge = (alertId) => {
 
 const fetchAlerts = async () => {
   try {
-    const response = await axios.get("http://localhost:3000/api/alerts");
+    const response = await axios.get("http://localhost:5000/api/alerts");
 
     if (allAlerts.value) {
       Object.keys(response.data).forEach((base) => {

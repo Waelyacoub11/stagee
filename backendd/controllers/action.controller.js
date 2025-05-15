@@ -57,7 +57,10 @@ const actionController = {
   },
   async statActionByType(req, res) {
     try {
-      console.log("📊 Calcul des statistiques des actions par type...");
+      console.log(" Calcul des statistiques des actions par type...");
+      const selectedBase = req.body.selectedBase;
+      const role = req.user.role;
+
       let statsByType = {};
       let totalStats = {
         CONTRAST_CHANGE: 0,
@@ -82,7 +85,26 @@ const actionController = {
         );
       };
 
-      if (req.user.role === "globaladmin") {
+      if (role === "globaladmin" && selectedBase) {
+        try {
+          const actionModel = new ActionModel(pools[selectedBase]);
+          const actions = await actionModel.getAllActions();
+          statsByType[selectedBase] = calculateStats(actions);
+          return res.status(200).json({
+            message: "Statistiques récupérées",
+            data: statsByType
+          });
+        } catch (error) {
+          console.error(` Erreur pour ${selectedBase}:`, error);
+          statsByType[selectedBase] = {};
+          return res.status(200).json({
+            message: "Statistiques récupérées",
+            data: statsByType
+          });
+        }
+      }
+
+      if (role === "globaladmin") {
         for (const client in pools) {
           try {
             const actionModel = new ActionModel(pools[client]);
@@ -94,38 +116,36 @@ const actionController = {
               totalStats[key] += statsByType[client][key];
             }
           } catch (error) {
-            console.error(`❌ Erreur pour ${client}:`, error);
+            console.error(` Erreur pour ${client}:`, error);
             statsByType[client] = {};
           }
         }
-      } else if (req.user.role === "superadmin1") {
+      } else if (role === "superadmin1") {
         try {
           const actionModel = new ActionModel(pools.techno1);
           const actions = await actionModel.getAllActions();
-
           statsByType.techno1 = calculateStats(actions);
 
-          // Ajout des stats de techno1 au total
+          // Pour superadmin1, on ne calcule les totaux que pour techno1
           for (const key in statsByType.techno1) {
-            totalStats[key] += statsByType.techno1[key];
+            totalStats[key] = statsByType.techno1[key];
           }
         } catch (error) {
-          console.error("❌ Erreur pour techno1:", error);
+          console.error(" Erreur pour techno1:", error);
           statsByType.techno1 = {};
         }
-      } else if (req.user.role === "superadmin2") {
+      } else if (role === "superadmin2") {
         try {
           const actionModel = new ActionModel(pools.techno2);
           const actions = await actionModel.getAllActions();
-
           statsByType.techno2 = calculateStats(actions);
 
-          // Ajout des stats de techno2 au total
+          // Pour superadmin2, on ne calcule les totaux que pour techno2
           for (const key in statsByType.techno2) {
-            totalStats[key] += statsByType.techno2[key];
+            totalStats[key] = statsByType.techno2[key];
           }
         } catch (error) {
-          console.error("❌ Erreur pour techno2:", error);
+          console.error(" Erreur pour techno2:", error);
           statsByType.techno2 = {};
         }
       }
@@ -135,7 +155,7 @@ const actionController = {
 
       res.status(200).json({
         message: "Statistiques récupérées",
-        data: statsByType,
+        data: statsByType
       });
     } catch (err) {
       console.error("❌ Erreur globale :", err);

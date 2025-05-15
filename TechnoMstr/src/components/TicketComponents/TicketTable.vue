@@ -254,7 +254,7 @@ onMounted(async () => {
   }
   
   try {
-    const response = await axios.get("http://localhost:3000/api/tickets");
+    const response = await axios.get("http://localhost:5000/api/tickets");
     let allTickets = [];
     if (Array.isArray(response.data.techno1)) {
       response.data.techno1.forEach(ticket => {

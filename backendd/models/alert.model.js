@@ -11,9 +11,9 @@ class Alert {
             await this.pool.query('SELECT NOW()');
             console.log('Connexion réussie !');
     
-            // Jointure pour récupérer l'alerte + l'Adresse_IP de l'équipement
+            // Jointure pour récupérer l'alerte + l'Adresse_IP et le modèle de l'équipement
             const query = `
-                SELECT i.*, e."ipadresse" 
+                SELECT i.*, e."ipadresse", e.modele 
                 FROM information i
                 JOIN equipement e ON i.idequipement = e.idequipement;
             `;

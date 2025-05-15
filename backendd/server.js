@@ -104,9 +104,10 @@ app.get('*', (req, res) => {
   
 
 // 📌 Démarrer le serveur HTTP + WebSocket
-const port = process.env.PORT || 3000;
-server.listen(port, () => {
-    console.log(`🚀 Serveur HTTP & WebSocket démarré sur le port ${port}`);
+const port = process.env.PORT || 5000;
+const host = process.env.HOST || '0.0.0.0';
+server.listen(port, host, () => {
+    console.log(`🚀 Serveur HTTP & WebSocket démarré sur http://${host}:${port}`);
 });
 
 module.exports = io;

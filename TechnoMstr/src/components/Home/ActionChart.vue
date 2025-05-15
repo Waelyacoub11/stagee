@@ -7,12 +7,16 @@
   </div>
 </template>
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from "vue";
+import { ref, onMounted, onBeforeUnmount, watch } from "vue";
 import { Chart } from "chart.js/auto";
 import axios from "axios";
 
 const chartActionCanvas = ref(null);
 let chartInstance = null;
+
+const props = defineProps({
+  selectedBase: String,
+});
 
 const fetchStats = async () => {
   try {
@@ -23,8 +27,10 @@ const fetchStats = async () => {
     }
 
     const response = await axios.post(
-      "http://localhost:3000/api/actions/stat",
-      {},
+      "http://localhost:5000/api/actions/stat",
+      {
+        selectedBase: props.selectedBase
+      },
       {
         headers: {
           Authorization: `Bearer ${storedToken}`,
@@ -53,7 +59,21 @@ const createChart = (stats) => {
   const labels = ["CONTRAST_CHANGE", "IP_CHANGE", "SPEED_CHANGE", "CUSTOM_COMMAND"];
   const colors = ["#ffcc00", "#00ccff", "#66ff66", "#ff6666"];
 
-  const dataStat = labels.map((label) => stats.data?.tot[label] || 0);
+  // Utiliser les statistiques selon le rôle
+  const role = props.role;
+  const dataStat = labels.map((label) => {
+    if (role === "superadmin1") {
+      return stats.data?.techno1?.[label] || 0;
+    } else if (role === "superadmin2") {
+      return stats.data?.techno2?.[label] || 0;
+    } else {
+      // Pour globaladmin
+      if (props.selectedBase) {
+        return stats.data?.[props.selectedBase]?.[label] || 0;
+      }
+      return stats.data?.tot?.[label] || 0;
+    }
+  });
 
   chartInstance = new Chart(chartActionCanvas.value, {
     type: "doughnut",
@@ -72,11 +92,32 @@ const createChart = (stats) => {
       plugins: {
         legend: {
           position: "bottom",
+          labels: {
+            generateLabels: function (chart) {
+              const dataset = chart.data.datasets[0];
+              return chart.data.labels.map((label, index) => ({
+                text: `${label} (${dataset.data[index]})`,
+                fillStyle: dataset.backgroundColor[index],
+                strokeStyle: dataset.borderColor
+                  ? dataset.borderColor[index]
+                  : dataset.backgroundColor[index],
+                lineWidth: 1,
+                index: index,
+              }));
+            },
+          },
         },
       },
     },
   });
 };
+
+watch(() => props.selectedBase, async () => {
+  const stats = await fetchStats();
+  if (stats) {
+    createChart(stats);
+  }
+});
 
 onMounted(async () => {
   if (chartActionCanvas.value) {

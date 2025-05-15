@@ -1,12 +1,20 @@
 const { Pool } = require('pg');
 
+// Configuration de la base de données d'authentification
 const poolAuth = new Pool({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'auth',
-  password: 'azazaz',
-  port: 5433,
-  
+  user: process.env.AUTH_DB_USER || 'postgres',
+  host: process.env.AUTH_DB_HOST || 'db',
+  database: process.env.AUTH_DB_NAME || 'auth',
+  password: process.env.AUTH_DB_PASSWORD || 'azazaz',
+  port: process.env.AUTH_DB_PORT || 5432,
+});
+
+// Log de la configuration pour le débogage
+console.log('Configuration de la base auth:', {
+  host: process.env.AUTH_DB_HOST,
+  user: process.env.AUTH_DB_USER,
+  database: process.env.AUTH_DB_NAME,
+  port: process.env.AUTH_DB_PORT
 });
 
 // console.log("Configuration du pool auth :", poolAuth);  // Log du pool pour vérifier s'il est bien instancié

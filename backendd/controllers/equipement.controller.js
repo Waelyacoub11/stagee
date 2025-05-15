@@ -80,23 +80,44 @@ class EquipementController {
     }
   }
 
- async getEquipementDisponiblesNonDisponibles(req, res) {
-  try {
-    const selectedBase = req.body.selectedBase;
+  async getEquipementDisponiblesNonDisponibles(req, res) {
+    try {
+      const selectedBase = req.body.selectedBase;
+      const selectedCompany = req.body.selectedCompany;
 
-    const techno1Equipements = selectedBase === 'techno1' || !selectedBase
-      ? await this.equipementModels.techno1.getAllEquipements()
-      : [];
-    const techno2Equipements = selectedBase === 'techno2' || !selectedBase
-      ? await this.equipementModels.techno2.getAllEquipements()
-      : [];
+      if (req.user.role === "globaladmin" && selectedCompany) {
+        const equipements = await this.equipementModels[selectedCompany].getAllEquipements();
+        return res.json({
+          [selectedCompany]: {
+            disponibles: equipements.filter(
+              (equipement) =>
+                equipement.disponibilite !== "maintenance" &&
+                equipement.disponibilite !== null &&
+                equipement.disponibilite !== "null"
+            ),
+            nonDisponibles: equipements.filter(
+              (equipement) =>
+                equipement.disponibilite === "maintenance" ||
+                equipement.disponibilite === null ||
+                equipement.disponibilite === "null"
+            )
+          }
+        });
+      }
 
-    const disponiblesTechno1 = techno1Equipements.filter(
-      (equipement) =>
-        equipement.disponibilite !== "maintenance" &&
-        equipement.disponibilite !== null &&
-        equipement.disponibilite !== "null"
-    );
+      const techno1Equipements = selectedBase === 'techno1' || !selectedBase
+        ? await this.equipementModels.techno1.getAllEquipements()
+        : [];
+      const techno2Equipements = selectedBase === 'techno2' || !selectedBase
+        ? await this.equipementModels.techno2.getAllEquipements()
+        : [];
+
+      const disponiblesTechno1 = techno1Equipements.filter(
+        (equipement) =>
+          equipement.disponibilite !== "maintenance" &&
+          equipement.disponibilite !== null &&
+          equipement.disponibilite !== "null"
+      );
     const nonDisponiblesTechno1 = techno1Equipements.filter(
       (equipement) =>
         equipement.disponibilite == false || equipement.disponibilite == null

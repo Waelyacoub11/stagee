@@ -1,22 +1,26 @@
 const { Pool } = require('pg');
 
+// Configuration de la base de données à partir des variables d'environnement
+const DB_HOST = process.env.DB_HOST || 'localhost';
+const DB_USER = process.env.DB_USER || 'postgres';
+const DB_PASSWORD = process.env.DB_PASSWORD || 'azazaz';
+const DB_PORT = process.env.DB_PORT || 5432;
+
 // Liste des bases de données des entreprises
 const dbConfigs = {
     techno1: {
-        user: 'postgres',
-        host: 'localhost',
+        user: DB_USER,
+        host: DB_HOST,
         database: 'techno1',
-        password: 'azazaz',
-        port: 5433,
-        
+        password: DB_PASSWORD,
+        port: DB_PORT,
     },
     techno2: {
-        user: 'postgres',
-        host: 'localhost',
+        user: DB_USER,
+        host: DB_HOST,
         database: 'techno2',
-        password: 'azazaz',
-        port: 5433,
-        
+        password: DB_PASSWORD,
+        port: DB_PORT,
     }
 };
 

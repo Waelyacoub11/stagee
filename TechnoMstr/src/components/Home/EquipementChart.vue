@@ -9,7 +9,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { Chart } from "chart.js/auto";
 import axios from "axios";
 import { useAuthStore } from '@/stores/authStore'
@@ -18,52 +18,72 @@ const available = ref(0);
 const unavailable = ref(0);
 const chartInstance = ref(null);
 
+const props = defineProps({
+  selectedBase: String,
+});
+
+watch(() => props.selectedBase, () => {
+  fetchEquipementDisponibilite();
+});
+
 const fetchEquipementDisponibilite = async () => {
   try {
-      const storedToken = sessionStorage.getItem('token');
-      if (!storedToken) {
-          console.error('Aucun token disponible dans le sessionStorage');
-          return;
+    const storedToken = sessionStorage.getItem('token');
+    if (!storedToken) {
+      console.error('Aucun token disponible dans le sessionStorage');
+      return;
+    }
+
+    const response = await axios.post(
+      "http://localhost:5000/api/equipements/disponibilite", 
+      {
+        selectedBase: props.selectedBase
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${storedToken}`,
+        },
       }
+    );
+    
+    console.log("response ", response);
+    
+    // Initialiser les compteurs à zéro
+    let techno1Disponibles = 0;
+    let techno1NonDisponibles = 0;
+    let techno2Disponibles = 0;
+    let techno2NonDisponibles = 0;
+    
+    // Si une compagnie est sélectionnée, utiliser uniquement ses données
+    if (props.selectedBase && response.data[props.selectedBase]) {
+      const companyData = response.data[props.selectedBase];
+      const companyDisponibles = companyData.disponibles?.length || 0;
+      const companyNonDisponibles = companyData.nonDisponibles?.length || 0;
       
-      // Correction: Placer les headers correctement dans la configuration de la requête
-      const response = await axios.post(
-          "http://localhost:3000/api/equipements/disponibilite", 
-          {}, // Corps de la requête vide
-          {
-              headers: {
-                  Authorization: `Bearer ${storedToken}`,
-              },
-          }
-      );
-      
-      console.log("response ", response);
-      
-      // Initialiser les compteurs à zéro
-      let techno1Disponibles = 0;
-      let techno1NonDisponibles = 0;
-      let techno2Disponibles = 0;
-      let techno2NonDisponibles = 0;
-      
+      available.value = companyDisponibles;
+      unavailable.value = companyNonDisponibles;
+    } else {
+      // Sinon, utiliser les données combinées des deux bases
       // Vérifier si les données techno1 existent dans la réponse
       if (response.data.techno1) {
-          techno1Disponibles = response.data.techno1.disponibles?.length || 0;
-          techno1NonDisponibles = response.data.techno1.nonDisponibles?.length || 0;
+        techno1Disponibles = response.data.techno1.disponibles?.length || 0;
+        techno1NonDisponibles = response.data.techno1.nonDisponibles?.length || 0;
       }
       
       // Vérifier si les données techno2 existent dans la réponse
       if (response.data.techno2) {
-          techno2Disponibles = response.data.techno2.disponibles?.length || 0;
-          techno2NonDisponibles = response.data.techno2.nonDisponibles?.length || 0;
+        techno2Disponibles = response.data.techno2.disponibles?.length || 0;
+        techno2NonDisponibles = response.data.techno2.nonDisponibles?.length || 0;
       }
-      
+
       available.value = techno1Disponibles + techno2Disponibles;
       unavailable.value = techno1NonDisponibles + techno2NonDisponibles;
-      
-      // Mettre à jour le chart si déjà initialisé
-      if (chartInstance.value) {
-          updateChart();
-      }
+    }
+    
+    // Mettre à jour le chart si déjà initialisé
+    if (chartInstance.value) {
+      updateChart();
+    }
   } catch (error) {
       console.error('Erreur lors de la récupération des données :', error);
   }
@@ -83,6 +103,10 @@ const updateChart = () => {
       chartInstance.value.update();
   }
 };
+
+watch(() => props.selectedBase, () => {
+  fetchEquipementDisponibilite();
+});
 
 onMounted(async () => {
   await fetchEquipementDisponibilite();

@@ -6,6 +6,11 @@ import axios from 'axios'
 axios.defaults.headers.common['Content-Type'] = 'application/json'
 axios.defaults.headers.common['Accept'] = 'application/json'
 
+// Déterminer l'URL de base de l'API
+const API_BASE_URL = window.location.hostname === 'localhost' 
+  ? 'http://localhost:5000' 
+  : '/api'
+
 export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = ref(false)
   const user = ref(null)
@@ -32,7 +37,7 @@ export const useAuthStore = defineStore('auth', () => {
       axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`
       
       // Vérifier si le token est toujours valide
-      const response = await axios.get('http://localhost:3000/api/auth/me')
+      const response = await axios.get(`${API_BASE_URL}/api/auth/me`)
       
       if (response.data) {
         // Restaurer la session
@@ -61,7 +66,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       console.log('Tentative de connexion...')
       
-      const response = await axios.post('http://localhost:3000/api/auth/login', credentials)
+      const response = await axios.post(`${API_BASE_URL}/api/auth/login`, credentials)
       console.log('Réponse du serveur:', response.data)
       
       if (response.data && response.data.token && response.data.user) {
@@ -112,7 +117,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
     
     try {
-      const response = await axios.get('http://localhost:3000/api/auth/me', {
+      const response = await axios.get(`${API_BASE_URL}/api/auth/me`, {
         headers: {
           Authorization: `Bearer ${token.value}`
         }

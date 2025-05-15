@@ -326,7 +326,7 @@ onMounted(() => {
     selectedBase.value = availableBases.value[0]
   }
 
-  axios.get("http://localhost:3000/api/actions") // Remplacez par votre URL
+  axios.get("http://localhost:5000/api/actions") // Remplacez par votre URL
     .then(response => {
       let allActions = [];
       if (Array.isArray(response.data.techno1)) {

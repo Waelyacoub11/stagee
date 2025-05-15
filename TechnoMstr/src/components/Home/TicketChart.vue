@@ -42,7 +42,7 @@ const fetchStats = async () => {
     }
 
     const response = await axios.post(
-      "http://localhost:3000/api/tickets/stat",
+      "http://localhost:5000/api/tickets/stat",
       {},
       {
         headers: {

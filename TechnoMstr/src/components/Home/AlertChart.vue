@@ -19,8 +19,9 @@ const chartInstance = ref(null);
 const alertCanvas = ref(null);
 const authStore = useAuthStore();
 
-// Suivre l'entreprise sélectionnée
-const selectedCompany = computed(() => authStore.selectedCompany);
+const props = defineProps({
+  selectedBase: String,
+});
 
 const fetchAlertsStatut = async () => {
   try {
@@ -33,9 +34,9 @@ const fetchAlertsStatut = async () => {
 
     // Envoyer l'entreprise sélectionnée dans la requête
     const response = await axios.post(
-      "http://localhost:3000/api/alerts/statut",
+      "http://localhost:5000/api/alerts/statut",
       {
-        selectedCompany: selectedCompany.value
+        selectedCompany: props.selectedBase
       },
       {
         headers: {
@@ -75,7 +76,7 @@ const updateChart = () => {
 };
 
 // Observer les changements d'entreprise sélectionnée
-watch(selectedCompany, () => {
+watch(() => props.selectedBase, () => {
   fetchAlertsStatut();
 });
 

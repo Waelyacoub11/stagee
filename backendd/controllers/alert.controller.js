@@ -86,38 +86,60 @@ const alertController = {
 
   async statAlertsByStatut(req, res) {
     try {
+      const { selectedCompany } = req.body;
       let allAlerts = {};
-  
-      // Applique le même filtrage basé sur le rôle que dans les autres fonctions
+
+      // Pour globaladmin
       if (req.user.role === "globaladmin") {
-        // Le globaladmin voit toutes les alertes
-        for (const client in pools) {
-          const pool = pools[client];
-          const alert = new Alert(pool);
-          await alert.deleteOldAlertsForHealthyEquipments();
-          const alerts = await alert.getAllAlerts();
-          allAlerts[client] = alerts;
+        // Si une entreprise est sélectionnée, montrer uniquement ses alertes
+        if (selectedCompany) {
+          const pool = pools[selectedCompany];
+          if (pool) {
+            const alert = new Alert(pool);
+            await alert.deleteOldAlertsForHealthyEquipments();
+            const alerts = await alert.getAllAlerts();
+            allAlerts[selectedCompany] = alerts;
+          }
+        } else {
+          // Si aucune entreprise sélectionnée, montrer toutes les alertes
+          for (const client in pools) {
+            const pool = pools[client];
+            const alert = new Alert(pool);
+            await alert.deleteOldAlertsForHealthyEquipments();
+            const alerts = await alert.getAllAlerts();
+            allAlerts[client] = alerts;
+          }
         }
       } else if (req.user.role === "superadmin1") {
         // superadmin1 ne voit que les alertes de techno1
         const alert = new Alert(pools.techno1);
         await alert.deleteOldAlertsForHealthyEquipments();
-        allAlerts.techno1 = await alert.getAllAlerts();
+        const alerts = await alert.getAllAlerts();
+        allAlerts.techno1 = alerts;
       } else if (req.user.role === "superadmin2") {
         // superadmin2 ne voit que les alertes de techno2
         const alert = new Alert(pools.techno2);
         await alert.deleteOldAlertsForHealthyEquipments();
-        allAlerts.techno2 = await alert.getAllAlerts();
+        const alerts = await alert.getAllAlerts();
+        allAlerts.techno2 = alerts;
       }
-      
-      // Aplatir uniquement les alertes autorisées pour cet utilisateur
+
+      // Si une entreprise est sélectionnée, filtrer uniquement ses alertes
+      if (selectedCompany && allAlerts[selectedCompany]) {
+        const erreurs = allAlerts[selectedCompany].filter(alert => alert.statut === "erreur");
+        const avertissements = allAlerts[selectedCompany].filter(alert => alert.statut === "avertissement");
+        res.status(200).json({
+          erreurs: erreurs,
+          avertissements: avertissements,
+        });
+        return;
+      }
+
+      // Sinon, traiter toutes les alertes
       const mergedAlerts = Object.values(allAlerts).flat();
-  
-      const erreurs = mergedAlerts.filter((alert) => alert.statut === "erreur");
-      const avertissements = mergedAlerts.filter(
-        (alert) => alert.statut === "avertissement"
-      );
-  
+      const erreurs = mergedAlerts.filter(alert => alert.statut === "erreur");
+      const avertissements = mergedAlerts.filter(alert => alert.statut === "avertissement");
+
       res.status(200).json({
         erreurs: erreurs,
         avertissements: avertissements,
