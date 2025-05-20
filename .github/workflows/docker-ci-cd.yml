@@ -3,6 +3,8 @@ name: Docker CI/CD Pipeline with SonarCloud
 on:
   push:
     branches: [ main ]  # Ajuste selon ta branche principale (main, master, develop, etc.)
+    tags:
+      - 'v*.*.*'  # Déclencher le workflow uniquement pour les tags de version v1.0.0, v1.2.3, etc.
   pull_request:
     branches: [ main ]
 
@@ -117,6 +119,8 @@ jobs:
 
   build-and-push:
     runs-on: ubuntu-latest
+    # Ne construit et pousse l'image que pour les tags ou les PR mergeant vers main
+    if: startsWith(github.ref, 'refs/tags/v')
     needs: [sonarcloud-analysis, security-scan]  # Assure que l'analyse et le scan sont terminés avant de pousser
     
     steps:
@@ -132,16 +136,25 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
         
+    - name: Extract version from tag
+      if: startsWith(github.ref, 'refs/tags/')
+      id: get_version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
     - name: Build and push Backend
       uses: docker/build-push-action@v5
       with:
         context: ./backendd
         push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/stage-backend:latest
+        tags: |
+          ${{ secrets.DOCKERHUB_USERNAME }}/stage-backend:latest
+          ${{ secrets.DOCKERHUB_USERNAME }}/stage-backend:${{ steps.get_version.outputs.VERSION }}
         
     - name: Build and push Frontend
       uses: docker/build-push-action@v5
       with:
         context: ./TechnoMstr
         push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/stage-frontend:latest
+        tags: |
+          ${{ secrets.DOCKERHUB_USERNAME }}/stage-frontend:latest
+          ${{ secrets.DOCKERHUB_USERNAME }}/stage-frontend:${{ steps.get_version.outputs.VERSION }}
