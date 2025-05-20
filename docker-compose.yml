@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  backend:
+    # Utilisation du nom d'utilisateur correct (wael883)
+    image: ${DOCKERHUB_USERNAME:-wael883}/stage-backend:latest
+    # build:
+    #   context: ./backendd
+    #   dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      NODE_ENV: development
+      PORT: 5000
+      HOST: 0.0.0.0
+      
+      # Configuration pour techno1
+      DB_HOST: host.docker.internal
+      DB_USER: postgres
+      DB_PASSWORD: azazaz
+      DB_PORT: 5432
+      DB_NAME: techno1
+      
+      # Configuration pour techno2
+      DB2_HOST: host.docker.internal
+      DB2_USER: postgres
+      DB2_PASSWORD: azazaz
+      DB2_PORT: 5432
+      DB2_NAME: techno2
+      
+      # Configuration pour auth
+      AUTH_DB_HOST: host.docker.internal
+      AUTH_DB_USER: postgres
+      AUTH_DB_PASSWORD: azazaz
+      AUTH_DB_PORT: 5432
+      AUTH_DB_NAME: auth
+      
+    volumes:
+      - ./backendd:/usr/src/app
+      - /usr/src/app/node_modules
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    depends_on:
+      - frontend
+    networks:
+      - app-network
+
+  frontend:
+    # Utilisation du nom d'utilisateur correct (wael883)
+    image: ${DOCKERHUB_USERNAME:-wael883}/stage-frontend:latest
+    # build:
+    #   context: ./TechnoMstr
+    #   dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
