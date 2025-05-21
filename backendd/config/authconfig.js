@@ -1,20 +1,25 @@
 const { Pool } = require('pg');
 
-// Configuration de la base de données d'authentification
+// Configuration de la base de données d'authentification sur Aurora
 const poolAuth = new Pool({
   user: process.env.AUTH_DB_USER || 'postgres',
-  host: process.env.AUTH_DB_HOST || 'localhost',
+  host: process.env.AUTH_DB_HOST || 'techno.cluster-cmb4eeaw4r2x.us-east-1.rds.amazonaws.com',
   database: process.env.AUTH_DB_NAME || 'auth',
-  password: process.env.AUTH_DB_PASSWORD || 'azazaz',
+  password: process.env.AUTH_DB_PASSWORD || 'Azazaz123!',
   port: process.env.AUTH_DB_PORT || 5432,
+  ssl: process.env.SSL_ENABLED === 'true' || true ? { rejectUnauthorized: false } : false,  // SSL config pour Aurora
+  max: 20,  // Paramètres de pool recommandés pour Aurora
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000
 });
 
 // Log de la configuration pour le débogage
-console.log('Configuration de la base auth:', {
+console.log('Configuration du cluster Aurora pour auth:', {
   host: process.env.AUTH_DB_HOST,
   user: process.env.AUTH_DB_USER,
   database: process.env.AUTH_DB_NAME,
-  port: process.env.AUTH_DB_PORT
+  port: process.env.AUTH_DB_PORT,
+  ssl: process.env.SSL_ENABLED === 'true' || true
 });
 
 // console.log("Configuration du pool auth :", poolAuth);  // Log du pool pour vérifier s'il est bien instancié

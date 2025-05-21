@@ -14,24 +14,28 @@ services:
       PORT: 5000
       HOST: 0.0.0.0
       
-      # Configuration pour techno1
-      DB_HOST: host.docker.internal
+      # Configuration pour cluster Aurora
+      DB_HOST: techno.cluster-cmb4eeaw4r2x.us-east-1.rds.amazonaws.com
       DB_USER: postgres
-      DB_PASSWORD: azazaz
+      DB_PASSWORD: Azazaz123!
       DB_PORT: 5432
-      DB_NAME: techno1
+      SSL_ENABLED: "true"
       
-      # Configuration pour techno2
-      DB2_HOST: host.docker.internal
+      # Les deux bases techno1 et techno2 pointent désormais vers la même base 'techno' dans Aurora
+      # Configuration pour techno1
+      DB_NAME: techno
+      
+      # Configuration pour techno2 (même base dans Aurora)
+      DB2_HOST: techno.cluster-cmb4eeaw4r2x.us-east-1.rds.amazonaws.com
       DB2_USER: postgres
-      DB2_PASSWORD: azazaz
+      DB2_PASSWORD: Azazaz123!
       DB2_PORT: 5432
-      DB2_NAME: techno2
+      DB2_NAME: techno
       
-      # Configuration pour auth
-      AUTH_DB_HOST: host.docker.internal
+      # Configuration pour auth dans Aurora
+      AUTH_DB_HOST: techno.cluster-cmb4eeaw4r2x.us-east-1.rds.amazonaws.com
       AUTH_DB_USER: postgres
-      AUTH_DB_PASSWORD: azazaz
+      AUTH_DB_PASSWORD: Azazaz123!
       AUTH_DB_PORT: 5432
       AUTH_DB_NAME: auth
       

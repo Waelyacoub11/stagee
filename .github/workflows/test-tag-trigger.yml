@@ -1,0 +1,18 @@
+name: Test Tag Trigger
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  test-job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Print tag info
+        run: |
+          echo "Triggered by tag: ${{ github.ref }}"
+          echo "Tag name: ${GITHUB_REF#refs/tags/}"
