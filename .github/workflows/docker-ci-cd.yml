@@ -2,9 +2,9 @@ name: Docker CI/CD Pipeline with SonarCloud
 
 on:
   push:
-    branches: [ main ]  # Ajuste selon ta branche principale (main, master, develop, etc.)
+    branches: [ main ]  # Déclenche le workflow sur chaque push vers main
     tags:
-      - 'v*.*.*'  # Déclencher le workflow uniquement pour les tags de version v1.0.0, v1.2.3, etc.
+      - 'v*.*.*'  # Déclenche aussi le workflow pour les tags de version
   pull_request:
     branches: [ main ]
 
