@@ -20,7 +20,7 @@ services:
       DB_USER: postgres
       DB_PASSWORD: azazaz  # Remplacez par votre mot de passe PostgreSQL local
       DB_PORT: 5432
-      SSL_ENABLED: "false"
+      #SSL_ENABLED: "false"
       
       # Configuration pour la base secondaire (techno2)
       DB2_HOST: host.docker.internal
@@ -33,7 +33,7 @@ services:
       DB2_NAME: techno2  # Nom de votre deuxième base de données locale
       
       # Configuration pour auth dans Aurora
-      AUTH_DB_HOST: localhost
+      AUTH_DB_HOST: host.docker.internal
       AUTH_DB_USER: postgres
       AUTH_DB_PASSWORD: azazaz
       AUTH_DB_PORT: 5432
