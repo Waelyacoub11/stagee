@@ -191,7 +191,7 @@ const headers = [
   "Adresse IP", 
   "Parc",
   "Disponibilité",
-  "Numéro de série",
+  "Numéro de série (PDA/Imprimante)",
   "Contraste",
   "Vitesse",
   "Type d'impression"

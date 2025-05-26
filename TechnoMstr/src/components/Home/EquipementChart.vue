@@ -47,6 +47,7 @@ const fetchEquipementDisponibilite = async () => {
     );
     
     console.log("response ", response);
+    console.log("Données brutes de l'API:", JSON.stringify(response.data, null, 2));
     
     // Initialiser les compteurs à zéro
     let techno1Disponibles = 0;
@@ -63,21 +64,32 @@ const fetchEquipementDisponibilite = async () => {
       available.value = companyDisponibles;
       unavailable.value = companyNonDisponibles;
     } else {
-      // Sinon, utiliser les données combinées des deux bases
-      // Vérifier si les données techno1 existent dans la réponse
-      if (response.data.techno1) {
-        techno1Disponibles = response.data.techno1.disponibles?.length || 0;
-        techno1NonDisponibles = response.data.techno1.nonDisponibles?.length || 0;
+      // Pour le globaladmin sans sélection d'entreprise
+      let totalDisponibles = 0;
+      let totalNonDisponibles = 0;
+
+      // Parcourir toutes les entreprises dans la réponse
+      for (const company in response.data) {
+        if (response.data[company] && typeof response.data[company] === 'object') {
+          const companyData = response.data[company];
+          
+          // Vérifier si les données sont déjà séparées en disponibles/nonDisponibles
+          if (companyData.disponibles !== undefined && companyData.nonDisponibles !== undefined) {
+            totalDisponibles += companyData.disponibles?.length || 0;
+            totalNonDisponibles += companyData.nonDisponibles?.length || 0;
+          } 
+          // Si c'est un tableau d'équipements, les filtrer manuellement
+          else if (Array.isArray(companyData)) {
+            totalDisponibles += companyData.filter(e => e.disponibilite === true).length;
+            totalNonDisponibles += companyData.filter(e => e.disponibilite === false || e.disponibilite === null).length;
+          }
+        }
       }
       
-      // Vérifier si les données techno2 existent dans la réponse
-      if (response.data.techno2) {
-        techno2Disponibles = response.data.techno2.disponibles?.length || 0;
-        techno2NonDisponibles = response.data.techno2.nonDisponibles?.length || 0;
-      }
-
-      available.value = techno1Disponibles + techno2Disponibles;
-      unavailable.value = techno1NonDisponibles + techno2NonDisponibles;
+      available.value = totalDisponibles;
+      unavailable.value = totalNonDisponibles;
+      
+      console.log(`Total - Disponibles: ${totalDisponibles}, Non disponibles: ${totalNonDisponibles}`);
     }
     
     // Mettre à jour le chart si déjà initialisé

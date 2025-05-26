@@ -87,20 +87,17 @@ class EquipementController {
 
       if (req.user.role === "globaladmin" && selectedCompany) {
         const equipements = await this.equipementModels[selectedCompany].getAllEquipements();
+        
+        // Filtrer en utilisant des valeurs booléennes (true/false)
+        const disponibles = equipements.filter(e => e.disponibilite === true);
+        const nonDisponibles = equipements.filter(e => e.disponibilite === false || e.disponibilite === null);
+        
+        console.log(`${selectedCompany} - Total: ${equipements.length}, Disponibles: ${disponibles.length}, Non disponibles: ${nonDisponibles.length}`);
+        
         return res.json({
           [selectedCompany]: {
-            disponibles: equipements.filter(
-              (equipement) =>
-                equipement.disponibilite !== "maintenance" &&
-                equipement.disponibilite !== null &&
-                equipement.disponibilite !== "null"
-            ),
-            nonDisponibles: equipements.filter(
-              (equipement) =>
-                equipement.disponibilite === "maintenance" ||
-                equipement.disponibilite === null ||
-                equipement.disponibilite === "null"
-            )
+            disponibles: disponibles,
+            nonDisponibles: nonDisponibles
           }
         });
       }
@@ -111,44 +108,91 @@ class EquipementController {
       const techno2Equipements = selectedBase === 'techno2' || !selectedBase
         ? await this.equipementModels.techno2.getAllEquipements()
         : [];
+      
+      // Transformer les données pour s'assurer que disponibilite est un booléen
+      const transformEquipements = (equipements) => {
+        return equipements.map(equip => ({
+          ...equip,
+          disponibilite: equip.disponibilite === true || equip.disponibilite === 'true' || equip.disponibilite === 1 || equip.disponibilite === '1'
+        }));
+      };
 
-      const disponiblesTechno1 = techno1Equipements.filter(
-        (equipement) =>
-          equipement.disponibilite !== "maintenance" &&
-          equipement.disponibilite !== null &&
-          equipement.disponibilite !== "null"
+      // Appliquer la transformation
+      const transformedTechno1 = transformEquipements(techno1Equipements);
+      const transformedTechno2 = transformEquipements(techno2Equipements);
+      
+      console.log('Données transformées de techno1:', JSON.stringify(transformedTechno1, null, 2));
+      console.log('Données transformées de techno2:', JSON.stringify(transformedTechno2, null, 2));
+
+      // Afficher les valeurs de disponibilité pour comprendre le problème
+      console.log("Valeurs de disponibilité dans techno1:", techno1Equipements.map(e => e.disponibilite));
+      console.log("Valeurs de disponibilité dans techno2:", techno2Equipements.map(e => e.disponibilite));
+      
+      // Vérifier le type de données de disponibilité
+      if (techno1Equipements.length > 0) {
+        console.log("Type de disponibilité dans techno1:", typeof techno1Equipements[0].disponibilite);
+      }
+      if (techno2Equipements.length > 0) {
+        console.log("Type de disponibilité dans techno2:", typeof techno2Equipements[0].disponibilite);
+      }
+
+      // Utiliser les données transformées pour le filtrage
+      // Pour techno1
+      const disponiblesTechno1 = transformedTechno1.filter(
+        (equipement) => equipement.disponibilite === true
       );
-    const nonDisponiblesTechno1 = techno1Equipements.filter(
-      (equipement) =>
-        equipement.disponibilite == false || equipement.disponibilite == null
-    );
+      const nonDisponiblesTechno1 = transformedTechno1.filter(
+        (equipement) => equipement.disponibilite === false
+      );
 
-    const disponiblesTechno2 = techno2Equipements.filter(
-      (equipement) =>
-        equipement.disponibilite !== "maintenance" &&
-        equipement.disponibilite !== null &&
-        equipement.disponibilite !== "null"
-    );
-    const nonDisponiblesTechno2 = techno2Equipements.filter(
-      (equipement) =>
-        equipement.disponibilite == false || equipement.disponibilite == null
-    );
+      // Pour techno2
+      const disponiblesTechno2 = transformedTechno2.filter(
+        (equipement) => equipement.disponibilite === true
+      );
+      const nonDisponiblesTechno2 = transformedTechno2.filter(
+        (equipement) => equipement.disponibilite === false
+      );
+      
+      console.log('techno1 - Disponibles:', disponiblesTechno1.length, 'Non disponibles:', nonDisponiblesTechno1.length);
+      console.log('techno2 - Disponibles:', disponiblesTechno2.length, 'Non disponibles:', nonDisponiblesTechno2.length);
+      
+      // Afficher les résultats du filtrage
+      console.log("Disponibles techno1:", disponiblesTechno1.map(e => e.modele));
+      console.log("Non disponibles techno1:", nonDisponiblesTechno1.map(e => e.modele));
+      
+      // Ajouter des logs pour le débogage
+      console.log(`Techno1 - Total: ${techno1Equipements.length}, Disponibles: ${disponiblesTechno1.length}, Non disponibles: ${nonDisponiblesTechno1.length}`);
+      console.log(`Techno2 - Total: ${techno2Equipements.length}, Disponibles: ${disponiblesTechno2.length}, Non disponibles: ${nonDisponiblesTechno2.length}`);
+      
+      // Vérifier si les données sont identiques dans les deux bases
+      const techno1Json = JSON.stringify(techno1Equipements);
+      const techno2Json = JSON.stringify(techno2Equipements);
+      const dataIdentical = techno1Json === techno2Json;
+      
+      if (dataIdentical) {
+        console.log("ATTENTION: Les données de techno1 et techno2 sont identiques!");
+      }
 
     const role = req.user.role;
 
     if (role === "globaladmin") {
       let result = {};
       if (selectedBase === "techno1") {
+        // Format correct pour le frontendm
         result.techno1 = {
           disponibles: disponiblesTechno1,
           nonDisponibles: nonDisponiblesTechno1,
         };
+        console.log("Résultat pour techno1:", result);
       } else if (selectedBase === "techno2") {
+        // Format correct pour le frontend
         result.techno2 = {
           disponibles: disponiblesTechno2,
           nonDisponibles: nonDisponiblesTechno2,
         };
+        console.log("Résultat pour techno2:", result);
       } else {
+        // Format correct pour le frontend
         result = {
           techno1: {
             disponibles: disponiblesTechno1,
@@ -159,6 +203,7 @@ class EquipementController {
             nonDisponibles: nonDisponiblesTechno2,
           },
         };
+        console.log("Résultat pour les deux bases:", result);
       }
       return res.status(200).json(result);
     } else if (role === "superadmin1") {

@@ -1,6 +1,7 @@
+require('dotenv').config();
+
 const express = require('express');
 const path = require('path');
-
 const http = require('http');
 const cors = require('cors'); // ✅ Import de CORS
 const { Server } = require('socket.io');
@@ -97,14 +98,18 @@ app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ message: 'Erreur serveur' });
 });
-// ⚠️ Adapter ce chemin selon la nouvelle structure
-app.use(express.static(path.join(__dirname, 'TechnoMstr/dist')));
+// En environnement Docker, le frontend est un service séparé
+// Le backend ne doit servir que les API, pas les fichiers statiques
+// Les routes API sont déjà définies ci-dessus
 
-
+// Route pour les requêtes non-API - renvoie une réponse JSON au lieu de chercher un fichier HTML
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'TechnoMstr/dist/index.html'));
-  });
-  
+    // Vérifier si la route commence par /api
+    if (!req.path.startsWith('/api') && req.path !== '/test') {
+        res.status(404).json({ message: 'Route API non trouvée' });
+    }
+});
+
 
 // 📌 Démarrer le serveur HTTP + WebSocket
 const port = process.env.PORT || 5000;

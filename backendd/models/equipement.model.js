@@ -13,13 +13,18 @@ class Equipement {
             await this.pool.query('SELECT NOW()');
             console.log('Connexion réussie !');
             
-            // Exécuter la requête pour récupérer tous les équipements avec jointure
+            // Récupérer tous les PDAs
+            const pdasResult = await this.pool.query('SELECT id, modele, serialnumber FROM pda');
+            const pdas = pdasResult.rows;
+            console.log(`PDAs récupérés: ${pdas.length}`);
+            
+            // Exécuter la requête pour récupérer les équipements sans jointure PDA
             const result = await this.pool.query(`
                 SELECT 
                     e.modele,
                     e.ipadresse,
                     e.disponibilite,
-                    i.serialnumber,
+                    i.serialnumber AS imprimante_serialnumber,
                     i.contrast, 
                     i.typeimpression,
                     i.vitesse,
@@ -29,7 +34,23 @@ class Equipement {
                 LEFT JOIN parc p ON e.idparc = p.idparc
                 ORDER BY e.idequipement DESC
             `);
-            return result.rows;  // Retourner les résultats de la base de données
+            
+            // Associer manuellement les PDAs aux équipements
+            const transformedRows = result.rows.map(equipment => {
+                // Rechercher un PDA correspondant au modèle
+                const matchingPda = pdas.find(pda => 
+                    pda.modele && equipment.modele && 
+                    pda.modele.trim().toLowerCase() === equipment.modele.trim().toLowerCase()
+                );
+                
+                return {
+                    ...equipment,
+                    pda_serialnumber: matchingPda ? matchingPda.serialnumber : null,
+                    serialnumber: matchingPda ? matchingPda.serialnumber : equipment.imprimante_serialnumber || 'N/A'
+                };
+            });
+            
+            return transformedRows;  // Retourner les résultats transformés
         } catch (err) {
             console.error("Erreur lors de la récupération des équipements :", err);
             throw new Error("Impossible de récupérer les équipements.");
@@ -40,13 +61,18 @@ class Equipement {
         try {
             console.log(`📡 Requête SQL en cours pour le modèle : ${modele}`);
 
-            // Requête SQL pour récupérer les équipements ayant le modèle spécifié avec jointure
+            // Récupérer tous les PDAs
+            const pdasResult = await this.pool.query('SELECT id, modele, serialnumber FROM pda');
+            const pdas = pdasResult.rows;
+            console.log(`PDAs récupérés: ${pdas.length}`);
+            
+            // Requête SQL pour récupérer les équipements sans jointure PDA
             const query = `
                 SELECT 
                     e.modele,
                     e.ipadresse,
                     e.disponibilite,
-                    i.serialnumber,
+                    i.serialnumber AS imprimante_serialnumber,
                     i.contrast,
                     i.typeimpression,
                     i.vitesse,
@@ -58,9 +84,24 @@ class Equipement {
                 ORDER BY e.idequipement DESC
             `;
             const result = await this.pool.query(query, [modele]);
+            
+            // Associer manuellement les PDAs aux équipements
+            const transformedRows = result.rows.map(equipment => {
+                // Rechercher un PDA correspondant au modèle
+                const matchingPda = pdas.find(pda => 
+                    pda.modele && equipment.modele && 
+                    pda.modele.trim().toLowerCase() === equipment.modele.trim().toLowerCase()
+                );
+                
+                return {
+                    ...equipment,
+                    pda_serialnumber: matchingPda ? matchingPda.serialnumber : null,
+                    serialnumber: matchingPda ? matchingPda.serialnumber : equipment.imprimante_serialnumber || 'N/A'
+                };
+            });
 
-            console.log(`✅ Résultat trouvé : ${result.rows.length} équipements`);
-            return result.rows;  // Retourner les résultats
+            console.log(`✅ Résultat trouvé : ${transformedRows.length} équipements`);
+            return transformedRows;  // Retourner les résultats transformés
         } catch (err) {
             console.error("❌ Erreur lors de la récupération de l'équipement :", err);
             throw new Error("Impossible de récupérer l'équipement.");

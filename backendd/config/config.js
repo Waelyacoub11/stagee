@@ -1,9 +1,9 @@
 const { Pool } = require('pg');
 
 // Configuration des clusters Aurora à partir des variables d'environnement
-const DB_HOST = process.env.DB_HOST || 'techno.cluster-cmb4eeaw4r2x.us-east-1.rds.amazonaws.com';
+const DB_HOST = process.env.DB_HOST || 'localhost';
 const DB_USER = process.env.DB_USER || 'postgres';
-const DB_PASSWORD = process.env.DB_PASSWORD || 'Azazaz123!';
+const DB_PASSWORD = process.env.DB_PASSWORD || 'azazaz';
 const DB_PORT = process.env.DB_PORT || 5432;
 
 // Configuration SSL pour Aurora
@@ -17,9 +17,9 @@ const dbConfigs = {
         database: 'techno',
         password: DB_PASSWORD,
         port: DB_PORT,
-        ssl: SSL_ENABLED ? { rejectUnauthorized: false } : false,  // SSL config pour Aurora
-        max: 20,  // Paramètres de pool recommandés pour Aurora
-        idleTimeoutMillis: 30000,
+        //ssl: SSL_ENABLED ? { rejectUnauthorized: false } : false,  // SSL config pour Aurora
+        //max: 20,  // Paramètres de pool recommandés pour Aurora
+        //idleTimeoutMillis: 30000,
         connectionTimeoutMillis: 2000
     },
     techno2: {
@@ -28,10 +28,10 @@ const dbConfigs = {
         database: 'techno',
         password: DB_PASSWORD,
         port: DB_PORT,
-        ssl: SSL_ENABLED ? { rejectUnauthorized: false } : false,  // SSL config pour Aurora
-        max: 20,
-        idleTimeoutMillis: 30000,
-        connectionTimeoutMillis: 2000
+        //ssl: SSL_ENABLED ? { rejectUnauthorized: false } : false,  // SSL config pour Aurora
+        //max: 20,
+        //idleTimeoutMillis: 30000,
+        // connectionTimeoutMillis: 2000
     }
 };
 

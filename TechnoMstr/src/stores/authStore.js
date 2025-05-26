@@ -64,34 +64,65 @@ export const useAuthStore = defineStore('auth', () => {
 
   const login = async (credentials) => {
     try {
-      console.log('Tentative de connexion...')
+      console.log('=== TENTATIVE DE CONNEXION ===');
+      console.log('URL de l\'API:', `${API_BASE_URL}/api/auth/login`);
+      console.log('Données d\'identification:', { username: credentials.username, password: '***' });
       
-      const response = await axios.post(`${API_BASE_URL}/api/auth/login`, credentials)
-      console.log('Réponse du serveur:', response.data)
+      const response = await axios.post(`${API_BASE_URL}/api/auth/login`, credentials, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        validateStatus: function (status) {
+          return status < 500; // Reject only if the status code is greater than or equal to 500
+        }
+      });
+      
+      console.log('Réponse du serveur:', {
+        status: response.status,
+        statusText: response.statusText,
+        data: response.data,
+        headers: response.headers
+      });
       
       if (response.data && response.data.token && response.data.user) {
-        console.log('Connexion réussie, mise à jour de l\'état...')
+        console.log('✅ Connexion réussie, mise à jour de l\'état...');
         
-        // Update state
-        token.value = response.data.token
-        user.value = response.data.user
-        isAuthenticated.value = true
+        // Mettre à jour l'état
+        token.value = response.data.token;
+        user.value = response.data.user;
+        isAuthenticated.value = true;
         
-        // Update sessionStorage instead of localStorage
-        sessionStorage.setItem('token', response.data.token)
-        sessionStorage.setItem('user', JSON.stringify(response.data.user))
+        // Mettre à jour le sessionStorage
+        sessionStorage.setItem('token', response.data.token);
+        sessionStorage.setItem('user', JSON.stringify(response.data.user));
         
-        // Update axios defaults
-        axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`
+        // Mettre à jour les en-têtes axios par défaut
+        axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
         
-        return true
+        return true;
+      } else {
+        console.error('❌ Réponse inattendue du serveur:', response.data);
+        return false;
       }
       
-      return false
-      
     } catch (error) {
-      console.error('Erreur de connexion:', error)
-      return false
+      console.error('❌ Erreur de connexion:', {
+        message: error.message,
+        response: error.response ? {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          data: error.response.data,
+          headers: error.response.headers
+        } : 'Aucune réponse du serveur',
+        request: error.request ? 'Requête effectuée mais pas de réponse' : 'Erreur lors de la création de la requête',
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          headers: error.config?.headers
+        }
+      });
+      return false;
     }
   }
 
