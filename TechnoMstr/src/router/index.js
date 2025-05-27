@@ -45,6 +45,12 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/alerts',
+      name: 'Alerts',
+      component: () => import('../views/AlertsList.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/logout',
       name: 'Logout',
       beforeEnter: (to, from, next) => {

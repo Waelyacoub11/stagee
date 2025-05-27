@@ -11,9 +11,11 @@
 import { ref, onMounted, onBeforeUnmount, watch } from "vue";
 import { Chart } from "chart.js/auto";
 import axios from "axios";
+import { useRouter } from 'vue-router';
 
 const chartTicketStatusCanvas = ref(null);
 let chartInstance = null;
+const router = useRouter();
 
 const props = defineProps({
   selectedBase: String,
@@ -55,6 +57,13 @@ const fetchStats = async () => {
     console.error("Erreur lors de la récupération des statistiques par statut:", error);
     return null;
   }
+};
+
+// Fonction pour naviguer vers la page des tickets
+const navigateToTickets = () => {
+  router.push({
+    name: 'Tickets'
+  });
 };
 
 const createChart = (stats) => {
@@ -119,9 +128,30 @@ const createChart = (stats) => {
     },
     options: {
       responsive: true,
+      onClick: (event, elements) => {
+        // Vérifier si l'utilisateur a cliqué sur un élément du graphique
+        if (elements.length > 0) {
+          const index = elements[0].index;
+          const label = chartInstance.data.labels[index];
+          
+          // Si l'utilisateur a cliqué sur la section "Ouvert", naviguer vers la page des tickets
+          if (label === "Ouvert") {
+            navigateToTickets();
+          }
+        }
+      },
       plugins: {
         legend: {
           position: "bottom",
+          onClick: (e, legendItem) => {
+            // Si l'utilisateur clique sur la légende "Ouvert", naviguer vers la page des tickets
+            if (chartInstance.data.labels[legendItem.index] === "Ouvert") {
+              navigateToTickets();
+            } else {
+              // Comportement par défaut pour les autres légendes
+              Chart.defaults.plugins.legend.onClick(e, legendItem, chartInstance);
+            }
+          },
           labels: {
             generateLabels: function(chart) {
               const dataset = chart.data.datasets[0];
@@ -143,6 +173,13 @@ const createChart = (stats) => {
               const total = context.dataset.data.reduce((acc, val) => acc + val, 0);
               const percentage = Math.round((value / total) * 100);
               return `${label}: ${value} (${percentage}%)`;
+            },
+            footer: function(tooltipItems) {
+              // Ajouter une indication que le clic mène à la liste des tickets
+              if (tooltipItems[0].label === "Ouvert") {
+                return 'Cliquez pour voir les tickets';
+              }
+              return '';
             }
           }
         }

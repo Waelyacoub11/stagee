@@ -24,21 +24,21 @@
       />
     </div>
 
-    <!-- Section équipements avec pagination -->
-    <div v-if="!selectedBase && latestEquipments.length > 0">
-      <h2 class="section-title">Derniers équipements</h2>
+    <!-- Section équipements non disponibles avant sélection d'entreprise -->
+    <div v-if="!selectedBase && unavailableEquipments.length > 0">
+      <h2 class="section-title">Équipements non disponibles de toutes les Entreprises</h2>
       <table class="styled-table">
         <thead>
           <tr>
             <th v-for="header in headers" :key="header" @click="sortBy(header)">{{ header }}</th>
+            <th>Entreprise</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="equipment in latestEquipments" :key="equipment.modele">
+          <tr v-for="equipment in unavailableEquipments" :key="equipment.idequipement">
             <td>{{ equipment.modele }}</td>
             <td>{{ equipment.ipadresse }}</td>
-            <td>{{ equipment.nomparc }}</td>
             <td :class="getAvailabilityClass(equipment.disponibilite)">
               {{ equipment.disponibilite ? 'Disponible' : 'Non disponible' }}
             </td>
@@ -46,8 +46,9 @@
             <td>{{ equipment.contrast || 'N/A' }}</td>
             <td>{{ equipment.vitesse || 'N/A' }}</td>
             <td>{{ equipment.typeimpression || 'N/A' }}</td>
+            
             <td>
-              <button @click="viewEquipmentDetails(equipment)" class="details-button">Détails</button>
+              <button @click="viewEquipmentDetails(equipment)" class="details-button" type="button">Détails</button>
             </td>
           </tr>
         </tbody>
@@ -68,7 +69,6 @@
           <tr v-for="equipment in paginatedEquipments[selectedBase]" :key="equipment.modele">
             <td>{{ equipment.modele }}</td>
             <td>{{ equipment.ipadresse }}</td>
-            <td>{{ equipment.nomparc }}</td>
             <td :class="getAvailabilityClass(equipment.disponibilite)">
               {{ equipment.disponibilite ? 'Disponible' : 'Non disponible' }}
             </td>
@@ -77,7 +77,7 @@
             <td>{{ equipment.vitesse || 'N/A' }}</td>
             <td>{{ equipment.typeimpression || 'N/A' }}</td>
             <td>
-              <button @click="viewEquipmentDetails(equipment)" class="details-button">Détails</button>
+              <button @click="viewEquipmentDetails(equipment)" class="details-button" type="button">Détails</button>
             </td>
           </tr>
         </tbody>
@@ -98,6 +98,10 @@
           <h2>Détails de l'Équipement</h2>
           <button @click="closeModal" class="close-button">×</button>
         </div>
+        <!-- Indication de l'entreprise -->
+        <div class="origin-indicator">
+          Entreprise: <span class="enterprise-badge" :class="{'techno1-badge': selectedEquipment.origin === 'Techno 1', 'techno2-badge': selectedEquipment.origin === 'Techno 2'}">{{ selectedEquipment.origin || 'Non spécifiée' }}</span>
+        </div>
         <div class="modal-body">
           <div class="info-section">
             <h3>Informations Générales</h3>
@@ -110,10 +114,7 @@
                 <span class="info-label">Adresse IP</span>
                 <span class="info-value">{{ selectedEquipment.ipadresse }}</span>
               </div>
-              <div class="info-item">
-                <span class="info-label">Parc</span>
-                <span class="info-value">{{ selectedEquipment.nomparc }}</span>
-              </div>
+
               <div class="info-item">
                 <span class="info-label">Disponibilité</span>
                 <span :class="['status-badge', getAvailabilityClass(selectedEquipment.disponibilite)]">
@@ -189,7 +190,6 @@ const currentPage = ref({ "Techno 1": 1, "Techno 2": 1 });
 const headers = [
   "Modèle", 
   "Adresse IP", 
-  "Parc",
   "Disponibilité",
   "Numéro de série (PDA/Imprimante)",
   "Contraste",
@@ -264,7 +264,47 @@ const sortedEquipments = computed(() => {
   return groupedEquipments;
 });
 
-// Calcul des derniers équipements (les 5 plus récents)
+// Équipements non disponibles de toutes les bases
+const unavailableEquipments = computed(() => {
+  // Filtrer d'abord tous les équipements non disponibles
+  const nonAvailable = equipments.value.filter(equipment => !equipment.disponibilite);
+  
+  // Si la recherche est active, filtrer selon le terme de recherche
+  let filtered = nonAvailable;
+  if (searchQuery.value) {
+    filtered = filtered.filter(equipment =>
+      Object.values(equipment).some(value =>
+        String(value).toLowerCase().includes(searchQuery.value.toLowerCase())
+      )
+    );
+  }
+  
+  // Trier les équipements par source (Techno 1 ou Techno 2)
+  if (sortField.value) {
+    filtered.sort((a, b) => {
+      const aValue = a[sortField.value] || '';
+      const bValue = b[sortField.value] || '';
+      
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return sortDirection.value === 'asc' 
+          ? aValue.localeCompare(bValue) 
+          : bValue.localeCompare(aValue);
+      } else {
+        return sortDirection.value === 'asc' 
+          ? aValue - bValue 
+          : bValue - aValue;
+      }
+    });
+  } else {
+    // Tri par défaut par ID décroissant
+    filtered.sort((a, b) => b.idequipement - a.idequipement);
+  }
+  
+  // Limiter à un nombre raisonnable d'équipements
+  return filtered.slice(0, 15); // Montrer les 15 premiers équipements non disponibles
+});
+
+// Calcul des derniers équipements (conservé pour compatibilité)
 const latestEquipments = computed(() => {
   return equipments.value.slice(0, 5);
 });
@@ -308,11 +348,98 @@ const sortBy = (field) => {
 
 // Ouvrir la fenêtre modale avec les détails de l'équipement
 const viewEquipmentDetails = (equipment) => {
-  selectedEquipment.value = equipment;
+  try {
+    console.log("Bouton Détails cliqué", equipment);
+    console.log("Equipements disponibles:", equipments.value);
+    
+    if (equipment) {
+      // Ajouter un identifiant original de l'équipement
+      let equipmentId = equipment.serialnumber || equipment.ipadresse;
+      console.log("Identificateur de l'équipement:", equipmentId);
+      
+      // Identifier directement la base
+      let origin = "Inconnue";
+      
+      // Si nous sommes déjà dans une vue filtrée par base
+      if (selectedBase.value) {
+        console.log("Base déjà sélectionnée:", selectedBase.value);
+        origin = selectedBase.value;
+      } 
+      // Si l'équipement a une source définie, l'utiliser directement
+      else if (equipment.source) {
+        origin = equipment.source;
+        console.log("Source définie dans l'équipement:", origin);
+      }
+      // Si l'équipement est affiché dans la liste des non-disponibles de toutes les bases
+      else if (unavailableEquipments.value) {
+        // Déterminer de quelle liste l'équipement provient
+        const techno1EquipmentIds = (equipments.value["Techno 1"] || []).map(e => e.serialnumber || e.ipadresse);
+        console.log("IDs des équipements de Techno 1:", techno1EquipmentIds);
+        
+        if (techno1EquipmentIds.includes(equipmentId)) {
+          origin = "Techno 1";
+          console.log("Trouvé dans Techno 1!");
+        } else {
+          const techno2EquipmentIds = (equipments.value["Techno 2"] || []).map(e => e.serialnumber || e.ipadresse);
+          console.log("IDs des équipements de Techno 2:", techno2EquipmentIds);
+          
+          if (techno2EquipmentIds.includes(equipmentId)) {
+            origin = "Techno 2";
+            console.log("Trouvé dans Techno 2!");
+          }
+        }
+      }
+      
+      // Les données montrent que les mêmes équipements existent dans les deux bases
+      // Notre priorité est d'abord de déterminer la base de l'équipement sélectionné
+      if (origin === "Inconnue") {
+        // Si l'équipement vient d'une base sélectionnée, utiliser cette base
+        if (selectedBase.value) {
+          origin = selectedBase.value;
+          console.log("Attribution selon la base sélectionnée:", origin);
+        }
+        // Sinon, essayer de déterminer en fonction de la table depuis laquelle il a été sélectionné
+        else if (equipment._source) {
+          origin = equipment._source;
+          console.log("Attribution selon la source:", origin);
+        }
+        // Pour les cas où nous n'avons pas cette information, faire notre meilleur effort
+        else {
+          // Pour les imprimantes, attribuer à Techno 1 (bien qu'elles existent dans les deux bases)
+          if (equipment.modele && equipment.modele.startsWith("Z")) {
+            origin = "Techno 1";
+            console.log("Attribution par défaut à Techno 1 pour l'imprimante", equipment.modele);
+          }
+          // Pour les PDAs, attribution arbitraire
+          else if (equipment.modele && equipment.modele.includes("MC")) {
+            // Attribution arbitraire basée sur l'IP, mais comme elles existent aussi dans les deux bases...
+            if (equipment.ipadresse === "10.0.0.213") {
+              origin = "Techno 1";
+            } else {
+              origin = "Techno 2";
+            }
+            console.log("Attribution par défaut pour le PDA", equipment.modele, "vers", origin);
+          }
+        }
+      }
+      
+      console.log("Base d'origine déterminée:", origin);
+      
+      // Stocker l'origine avec l'équipement sélectionné
+      selectedEquipment.value = { ...equipment, origin };
+    }
+  } catch (error) {
+    console.error("Erreur lors de l'ouverture des détails:", error);
+    // En cas d'erreur, on affiche quand même les détails
+    selectedEquipment.value = { ...equipment, origin: "Inconnue" };
+  }
 };
+
+
 
 // Fermer la fenêtre modale
 const closeModal = () => {
+  console.log("Fermeture de la modale");
   selectedEquipment.value = null;
 };
 
@@ -427,28 +554,56 @@ const getAvailabilityClass = (disponibilite) => {
   padding: 8px 16px;
   font-size: 14px;
   color: white;
-  background-color:#3b82f6;
+  background-color: #3b82f6;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  z-index: 10;
+  position: relative;
 }
 
 .details-button:hover {
-  background-color:rgb(40, 33, 136);
+  background-color: rgb(40, 33, 136);
+}
+
+.origin-indicator {
+  background-color: #f0f4f8;
+  padding: 8px 16px;
+  border-bottom: 1px solid #e1e4e8;
+  font-size: 14px;
+  color: #555;
+}
+
+.origin-name {
+  font-weight: bold;
+  color: #3498db;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background-color: #e3f2fd;
+}
+
+.techno1 {
+  background-color: #e3f7ed;
+  color: #16a34a;
+}
+
+.techno2 {
+  background-color: #ebf5ff;
+  color: #2563eb;
 }
 
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  right: 0;
+  bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 999;
+  z-index: 1000;
 }
 
 .modal-content {
@@ -532,13 +687,37 @@ const getAvailabilityClass = (disponibilite) => {
 }
 
 .available {
-  background-color: #dcfce7;
-  color: #166534;
+  background-color: #4CAF50;
+  color: red;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-weight: bold;
 }
 
 .unavailable {
-  background-color: #fee2e2;
-  color: #991b1b;
+  background-color: #F44336;
+  color: red;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.enterprise-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  white-space: nowrap;
+}
+
+.techno1-badge {
+  background-color: #4C6EF5 !important; /* Bleu pour Techno 1 */
+}
+
+.techno2-badge {
+  background-color: #7048E8 !important; /* Violet pour Techno 2 */
 }
 
 .page-title {

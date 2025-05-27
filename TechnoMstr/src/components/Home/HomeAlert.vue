@@ -157,110 +157,102 @@
   <div v-else>
     <div class="bg-white p-6 rounded-lg shadow-lg">
       <div class="space-y-6">
-        <!-- Première rangée avec les 3 graphiques principaux -->
+        <!-- Première rangée : 3 graphiques principaux côte à côte -->
+        <div class="grid grid-cols-3 gap-6 mb-8">
+          <!-- Graphique des équipements (1er) -->
+          <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm h-64">
+            <ErrorBoundary :key="'equipement-' + chartReloadKey">
+              <template #default>
+                <EquipementChart :selectedBase="selectedBase" />
+              </template>
+              <template #fallback="{ error }">
+                <div class="p-4 bg-red-50 text-red-600 rounded-lg h-full flex flex-col items-center justify-center">
+                  <p class="font-semibold">Erreur de chargement du graphique des équipements</p>
+                  <small>{{ error.message }}</small>
+                </div>
+              </template>
+            </ErrorBoundary>
+          </div>
+
+          <!-- Graphique des tickets par statut (2ème) -->
+          <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm h-64">
+            <ErrorBoundary :key="'ticket-status-' + chartReloadKey">
+              <template #default>
+                <TicketStatusChart :selectedBase="selectedBase" :role="role" />
+              </template>
+              <template #fallback="{ error }">
+                <div class="p-4 bg-red-50 text-red-600 rounded-lg h-full flex flex-col items-center justify-center">
+                  <p class="font-semibold">Erreur de chargement du graphique des statuts de tickets</p>
+                  <small>{{ error.message }}</small>
+                </div>
+              </template>
+            </ErrorBoundary>
+          </div>
+
+          <!-- Graphique des alertes (3ème) -->
+          <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm h-64">
+            <ErrorBoundary :key="'alert-' + chartReloadKey">
+              <template #default>
+                <AlertChart :selectedBase="selectedBase" />
+              </template>
+              <template #fallback="{ error }">
+                <div class="p-4 bg-red-50 text-red-600 rounded-lg h-full flex flex-col items-center justify-center">
+                  <p class="font-semibold">Erreur de chargement du graphique des alertes</p>
+                  <small>{{ error.message }}</small>
+                </div>
+              </template>
+            </ErrorBoundary>
+          </div>
+        </div>
+
+        <!-- Deuxième rangée : autres graphiques -->
         <div class="grid grid-cols-3 gap-6">
-          <!-- Première colonne: graphique 1 et graphique 4 empilés -->
-          <div class="space-y-6">
-        <!-- Graphique 1 -->
-        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm h-64">
-          <ErrorBoundary :key="'equipement-' + chartReloadKey">
-            <template #default>
-              <EquipementChart :selectedBase="selectedBase" />
-            </template>
-            <template #fallback="{ error }">
-              <div class="p-4 bg-red-50 text-red-600 rounded-lg h-full flex flex-col items-center justify-center">
-                <p class="font-semibold">Erreur de chargement du graphique des équipements</p>
-                <small>{{ error.message }}</small>
-              </div>
-            </template>
-          </ErrorBoundary>
-        </div>
-        
-        <!-- Graphique 4 -->
-        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm h-64">
-          <ErrorBoundary :key="'alert-' + chartReloadKey">
-            <template #default>
-              <AlertChart :selectedBase="selectedBase" />
-            </template>
-            <template #fallback="{ error }">
-              <div class="p-4 bg-red-50 text-red-600 rounded-lg h-full flex flex-col items-center justify-center">
-                <p class="font-semibold">Erreur de chargement du graphique des alertes</p>
-                <small>{{ error.message }}</small>
-              </div>
-            </template>
-          </ErrorBoundary>
-        </div>
-      </div>
-      
-      <!-- Graphique 2 -->
-      <div class="space-y-6">
-        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm h-64">
-          <ErrorBoundary :key="'ticket-' + chartReloadKey">
-            <template #default>
-              <TicketChart :selectedBase="selectedBase" />
-            </template>
-            <template #fallback="{ error }">
-              <div class="p-4 bg-red-50 text-red-600 rounded-lg h-full flex flex-col items-center justify-center">
-                <p class="font-semibold">Erreur de chargement du graphique des tickets</p>
-                <small>{{ error.message }}</small>
-              </div>
-            </template>
-          </ErrorBoundary>
-        </div>
+          <!-- Graphique des tickets -->
+          <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm h-64">
+            <ErrorBoundary :key="'ticket-' + chartReloadKey">
+              <template #default>
+                <TicketChart :selectedBase="selectedBase" />
+              </template>
+              <template #fallback="{ error }">
+                <div class="p-4 bg-red-50 text-red-600 rounded-lg h-full flex flex-col items-center justify-center">
+                  <p class="font-semibold">Erreur de chargement du graphique des tickets</p>
+                  <small>{{ error.message }}</small>
+                </div>
+              </template>
+            </ErrorBoundary>
+          </div>
 
-        <!-- Graphique des tickets par statut (Résolu/Ouvert) -->
-        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm h-64 mt-6">
-          <ErrorBoundary :key="'ticket-status-' + chartReloadKey">
-            <template #default>
-              <TicketStatusChart :selectedBase="selectedBase" :role="role" />
-            </template>
-            <template #fallback="{ error }">
-              <div class="p-4 bg-red-50 text-red-600 rounded-lg h-full flex flex-col items-center justify-center">
-                <p class="font-semibold">Erreur de chargement du graphique des statuts de tickets</p>
-                <small>{{ error.message }}</small>
-              </div>
-            </template>
-          </ErrorBoundary>
-        </div>
-        
-
-      </div>
-      
-          <!-- Graphique 3 -->
-          <div class="space-y-6">
-            <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm h-64">
-              <ErrorBoundary :key="'action-' + chartReloadKey">
-                <template #default>
-                  <ActionChart :selectedBase="selectedBase" />
-                </template>
-                <template #fallback="{ error }">
-                  <div class="p-4 bg-red-50 text-red-600 rounded-lg h-full flex flex-col items-center justify-center">
-                    <p class="font-semibold">Erreur de chargement du graphique des actions</p>
-                    <small>{{ error.message }}</small>
-                  </div>
-                </template>
-              </ErrorBoundary>
-            </div>
-            
-            <!-- Graphique des utilisateurs -->
-            <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm h-64">
-              <ErrorBoundary :key="'users-' + chartReloadKey">
-                <template #default>
-                  <UsersChart :selectedBase="selectedBase" :role="role" />
-                </template>
-                <template #fallback="{ error }">
-                  <div class="p-4 bg-red-50 text-red-600 rounded-lg h-full flex flex-col items-center justify-center">
-                    <p class="font-semibold">Erreur de chargement du graphique des utilisateurs</p>
-                    <small>{{ error.message }}</small>
-                  </div>
-                </template>
-              </ErrorBoundary>
-            </div>
+          <!-- Graphique des actions -->
+          <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm h-64">
+            <ErrorBoundary :key="'action-' + chartReloadKey">
+              <template #default>
+                <ActionChart :selectedBase="selectedBase" />
+              </template>
+              <template #fallback="{ error }">
+                <div class="p-4 bg-red-50 text-red-600 rounded-lg h-full flex flex-col items-center justify-center">
+                  <p class="font-semibold">Erreur de chargement du graphique des actions</p>
+                  <small>{{ error.message }}</small>
+                </div>
+              </template>
+            </ErrorBoundary>
+          </div>
+          
+          <!-- Graphique des utilisateurs -->
+          <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm h-64">
+            <ErrorBoundary :key="'users-' + chartReloadKey">
+              <template #default>
+                <UsersChart :selectedBase="selectedBase" :role="role" />
+              </template>
+              <template #fallback="{ error }">
+                <div class="p-4 bg-red-50 text-red-600 rounded-lg h-full flex flex-col items-center justify-center">
+                  <p class="font-semibold">Erreur de chargement du graphique des utilisateurs</p>
+                  <small>{{ error.message }}</small>
+                </div>
+              </template>
+            </ErrorBoundary>
           </div>
         </div>
       </div>
-      
-      
     </div>
   </div>
 </section>

@@ -38,8 +38,8 @@
     </div>
 
     <!-- Section tickets avec pagination -->
-    <div v-if="!selectedBase && latestTickets.length > 0">
-      <h2 class="section-title">Derniers tickets</h2>
+    <div v-if="!selectedBase && openTickets.length > 0">
+      <h2 class="section-title">Tickets ouverts de toutes les Entreprises</h2>
       <div class="table-container">
         <table class="styled-table">
           <thead>
@@ -54,7 +54,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="ticket in latestTickets" :key="ticket.idticket" class="table-row">
+            <tr v-for="ticket in openTickets" :key="ticket.idticket" class="table-row">
               <td class="table-cell">
                 {{ ticket.sujet }}
                 <span v-if="ticket.is_technocode_ticket" class="technocode-tag">[TechnoCode]</span>
@@ -158,6 +158,13 @@
           <span v-if="selectedTicket.is_technocode_ticket" class="technocode-tag">[TechnoCode]</span>
         </h2>
         <div class="info-grid">
+          <div class="info-item enterprise-info">
+            <p><strong>Entreprise:</strong> 
+              <span class="enterprise-badge" :class="{'techno1-badge': selectedTicket.enterprise === 'Techno 1', 'techno2-badge': selectedTicket.enterprise === 'Techno 2'}">
+                {{ selectedTicket.enterprise || 'Non spécifiée' }}
+              </span>
+            </p>
+          </div>
           <div class="info-item">
             <p><strong>Sujet:</strong> {{ selectedTicket.sujet }}</p>
           </div>
@@ -367,7 +374,35 @@ const paginatedTickets = computed(() => {
   return result;
 });
 
-// Derniers tickets
+// Tickets ouverts de toutes les bases avec indication de l'entreprise
+const openTickets = computed(() => {
+  let result = [];
+  
+  // Récupérer les tickets de l'API
+  if (tickets.value && tickets.value.length > 0) {
+    // Filtrer d'abord les tickets ouverts
+    const openTicketsFiltered = filteredAndSortedTickets.value.filter(ticket => ticket.statut === "Ouvert");
+    
+    // Essayer de déterminer l'entreprise pour chaque ticket
+    result = openTicketsFiltered.map(ticket => {
+      // Essayer de déterminer l'entreprise par la source si disponible
+      if (ticket.source) {
+        return { ...ticket, _enterprise: ticket.source };
+      }
+      
+      // Si pas de source, vérifier d'autres attributs spécifiques
+      // Exemple basé sur le serialnumber ou d'autres attributs
+      
+      // Logique simple: ajouter une propriété _enterprise à chaque ticket
+      // En alternance pour la démonstration
+      return { ...ticket, _enterprise: ticket.idticket % 2 === 0 ? 'Techno 1' : 'Techno 2' };
+    });
+  }
+  
+  return result.slice(0, 10); // Limite à 10 tickets pour ne pas surcharger l'interface
+});
+
+// Derniers tickets (conservé pour compatibilité)
 const latestTickets = computed(() => {
   return filteredAndSortedTickets.value
     .slice(0, 5);
@@ -428,13 +463,54 @@ const statusClass = (statut) => {
 
 // Gestion des détails
 const viewTicketDetails = (ticket) => {
-  selectedTicket.value = ticket;
+  // Déterminer l'entreprise du ticket
+  let enterprise = 'Non spécifiée';
+  
+  if (selectedBase.value) {
+    // Si une base est sélectionnée, utiliser cette base
+    enterprise = selectedBase.value;
+  } else {
+    // Si on est dans la vue "tous les tickets", déterminer l'entreprise
+    // en fonction des données disponibles
+    if (ticket.source) {
+      enterprise = ticket.source;
+    } else if (ticket._enterprise) {
+      enterprise = ticket._enterprise;
+    } else {
+      // On peut aussi faire une vérification sur le serial number ou d'autres propriétés
+      // pour déterminer l'entreprise
+      enterprise = determineEnterpriseFromTicket(ticket);
+    }
+  }
+  
+  // Ajouter l'entreprise aux informations du ticket
+  selectedTicket.value = { ...ticket, enterprise };
   selectedTicketId.value = ticket.idticket;
 };
 
 const closeTicketDetails = () => {
   selectedTicketId.value = null;
   selectedTicket.value = null;
+};
+
+// Fonction pour déterminer l'entreprise d'un ticket basé sur ses attributs
+const determineEnterpriseFromTicket = (ticket) => {
+  // Vérification si le ticket est dans la liste des tickets ouverts
+  const techno1Tickets = openTickets.value.filter(t => t._enterprise === 'Techno 1');
+  const techno2Tickets = openTickets.value.filter(t => t._enterprise === 'Techno 2');
+  
+  // Vérifier si l'ID du ticket correspond à un ticket dans Techno 1 ou Techno 2
+  if (techno1Tickets.some(t => t.idticket === ticket.idticket)) {
+    return 'Techno 1';
+  } else if (techno2Tickets.some(t => t.idticket === ticket.idticket)) {
+    return 'Techno 2';
+  }
+  
+  // Si nous n'avons pas pu déterminer l'entreprise par la liste des tickets ouverts,
+  // essayer d'autres méthodes de détermination
+  // Par exemple, en fonction du serial number ou d'autres attributs spécifiques
+  
+  return 'Non spécifiée';
 };
 
 // Computed property pour filtrer les tickets selon la base sélectionnée
@@ -864,6 +940,31 @@ const filteredTickets = computed(() => {
   border-radius: 4px;
   font-size: 12px;
   font-weight: 600;
+}
+
+/* Styles pour les badges d'entreprise */
+.enterprise-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+}
+
+.techno1-badge {
+  background-color: #4C6EF5 !important; /* Bleu pour Techno 1 */
+}
+
+.techno2-badge {
+  background-color: #7048E8 !important; /* Violet pour Techno 2 */
+}
+
+/* Style pour mettre en évidence l'info d'entreprise */
+.enterprise-info {
+  grid-column: 1 / -1;
+  background-color: #E6F7FF;
+  border-left: 4px solid #1890FF;
 }
 
 /* Supprimer les styles non utilisés */

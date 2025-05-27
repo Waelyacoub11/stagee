@@ -20,7 +20,7 @@
 
       <router-link class="button" to="/Equipements">
         <span class="material-icons">devices</span>
-        <span class="text">Users</span>
+        <span class="text">Equipements</span>
       </router-link>
 
       <router-link class="button" to="/tickets">

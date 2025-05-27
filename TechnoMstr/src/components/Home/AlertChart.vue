@@ -1,9 +1,11 @@
 <template>
   <div class="alert-chart">
     <div class="chart-header">
-      <h3> alertes</h3>
+      <h3>Alertes</h3>
     </div>
-    <canvas ref="alertCanvas"></canvas>
+    <div class="chart-container" @click="navigateToAlertsPage">
+      <canvas ref="alertCanvas"></canvas>
+    </div>
   </div>
 </template>
 
@@ -12,12 +14,14 @@ import { ref, onMounted, computed, watch } from "vue";
 import { Chart } from "chart.js/auto";
 import axios from "axios";
 import { useAuthStore } from '@/stores/authStore';
+import { useRouter } from 'vue-router';
 
 const errors = ref(0);
 const warnings = ref(0);
 const chartInstance = ref(null);
 const alertCanvas = ref(null);
 const authStore = useAuthStore();
+const router = useRouter();
 
 const props = defineProps({
   selectedBase: String,
@@ -73,6 +77,11 @@ const updateChart = () => {
     chartInstance.value.data.datasets[0].data = [errors.value, warnings.value];
     chartInstance.value.update();
   }
+};
+
+// Fonction pour naviguer vers la page d'alertes
+const navigateToAlertsPage = () => {
+  router.push('/alerts');
 };
 
 // Observer les changements d'entreprise sélectionnée
@@ -137,5 +146,14 @@ onMounted(async () => {
 .chart-header h3 {
   margin-bottom: 1rem;
   font-size: 1.2rem;
+}
+
+.chart-container {
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.chart-container:hover {
+  transform: scale(1.05);
 }
 </style>

@@ -13,10 +13,12 @@ import { ref, computed, onMounted, watch } from "vue";
 import { Chart } from "chart.js/auto";
 import axios from "axios";
 import { useAuthStore } from '@/stores/authStore'
+import { useRouter } from 'vue-router'
 
 const available = ref(0);
 const unavailable = ref(0);
 const chartInstance = ref(null);
+const router = useRouter();
 
 const props = defineProps({
   selectedBase: String,
@@ -103,10 +105,17 @@ const fetchEquipementDisponibilite = async () => {
 
 const total = computed(() => available.value + unavailable.value);
 
-const labels = ["Équipements disponibles", "Équipements non disponibles"];
+const labels = ["Équipements disponibles", "Équipements non dispo"];
 const colors = ["#28a745", "#dc3545"];
 
 const chartCanvas = ref(null);
+
+// Fonction pour naviguer vers la liste des équipements
+const navigateToEquipements = () => {
+  router.push({
+    name: 'Equipements'  // Correction de la casse: 'Equipements' avec E majuscule
+  });
+};
 
 // Fonction pour mettre à jour le graphique
 const updateChart = () => {
@@ -136,9 +145,21 @@ onMounted(async () => {
       },
       options: {
           responsive: true,
+          onClick: (event, elements) => {
+              // Quand on clique sur la partie du graphique non disponible (index 1)
+              if (elements.length > 0 && elements[0].index === 1) {
+                  navigateToEquipements();
+              }
+          },
           plugins: {
               legend: {
                   position: 'bottom',
+                  onClick: (e, legendItem) => {
+                      // Quand on clique sur la légende des équipements non disponibles (index 1)
+                      if (legendItem.index === 1) {
+                          navigateToEquipements();
+                      }
+                  },
                   labels: {
                       generateLabels: function (chart) {
                           const dataset = chart.data.datasets[0];
@@ -152,6 +173,25 @@ onMounted(async () => {
                       },
                   },
               },
+              tooltip: {
+                  callbacks: {
+                      label: function(context) {
+                          let label = context.label || '';
+                          if (label) {
+                              label += ': ';
+                          }
+                          label += context.raw;
+                          return label;
+                      },
+                      footer: function(tooltipItems) {
+                          // Ajouter une indication que le clic mène à la liste filtrée
+                          if (tooltipItems[0].dataIndex === 1) {
+                              return 'Cliquez pour voir la liste';
+                          }
+                          return '';
+                      }
+                  }
+              }
           },
       },
   });
