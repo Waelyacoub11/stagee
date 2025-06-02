@@ -412,8 +412,8 @@ const viewEquipmentDetails = (equipment) => {
           }
           // Pour les PDAs, attribution arbitraire
           else if (equipment.modele && equipment.modele.includes("MC")) {
-            // Attribution arbitraire basée sur l'IP, mais comme elles existent aussi dans les deux bases...
-            if (equipment.ipadresse === "10.0.0.213") {
+            // Attribution basée sur l'adresse IP de Techno 1
+            if (equipment.ipadresse === import.meta.env.VITE_TECHNO1_IP) {
               origin = "Techno 1";
             } else {
               origin = "Techno 2";
