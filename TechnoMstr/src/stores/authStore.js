@@ -66,7 +66,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       console.log('=== TENTATIVE DE CONNEXION ===');
       console.log('URL de l\'API:', `${API_BASE_URL}/api/auth/login`);
-      console.log('Données d\'identification:', { username: credentials.username, password: '***' });
+     
       
       const response = await axios.post(`${API_BASE_URL}/api/auth/login`, credentials, {
         headers: {
