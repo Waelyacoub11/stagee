@@ -450,6 +450,34 @@ const getAvailabilityClass = (disponibilite) => {
 </script>
 
 <style scoped>
+/* Styles pour la disponibilité */
+.available {
+  color: #10b981; /* Vert */
+  font-weight: bold;
+}
+
+.unavailable {
+  color: #ef4444; /* Rouge */
+  font-weight: bold;
+}
+
+/* Styles pour les badges de statut dans les détails */
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.status-badge.available {
+  background-color: rgba(16, 185, 129, 0.1); /* Fond vert clair */
+  border: 1px solid #10b981;
+}
+
+.status-badge.unavailable {
+  background-color: rgba(239, 68, 68, 0.1); /* Fond rouge clair */
+  border: 1px solid #ef4444;
+}
+
 /* Styles généraux */
 .container {
   font-family: 'Roboto', sans-serif;

@@ -228,6 +228,70 @@ class EquipementController {
 }
 
   
+  async getEquipementsByType(req, res) {
+    try {
+      const selectedBase = req.body.selectedBase;
+      let result = {};
+
+      // Fonction pour classifier les équipements
+      const classifyEquipements = (equipements) => {
+        const imprimantes = equipements.filter(equip => 
+          equip.modele && equip.modele.toString().startsWith('Z')
+        );
+        const pdas = equipements.filter(equip => 
+          equip.modele && !equip.modele.toString().startsWith('Z')
+        );
+        
+        return {
+          imprimantes: imprimantes.length,
+          pdas: pdas.length
+        };
+      };
+
+      // Pour globaladmin
+      if (req.user.role === 'globaladmin') {
+        if (selectedBase === 'Techno 1') {
+          const techno1Equipements = await this.equipementModels.techno1.getAllEquipements();
+          result.techno1 = classifyEquipements(techno1Equipements);
+        } 
+        else if (selectedBase === 'Techno 2') {
+          const techno2Equipements = await this.equipementModels.techno2.getAllEquipements();
+          result.techno2 = classifyEquipements(techno2Equipements);
+        } 
+        else {
+          // Si aucune base n'est sélectionnée, récupérer les données des deux bases
+          const [techno1Equipements, techno2Equipements] = await Promise.all([
+            this.equipementModels.techno1.getAllEquipements(),
+            this.equipementModels.techno2.getAllEquipements()
+          ]);
+          
+          result.techno1 = classifyEquipements(techno1Equipements);
+          result.techno2 = classifyEquipements(techno2Equipements);
+          
+          // Ajouter un total global
+          result.total = {
+            imprimantes: result.techno1.imprimantes + result.techno2.imprimantes,
+            pdas: result.techno1.pdas + result.techno2.pdas
+          };
+        }
+      } 
+      // Pour superadmin1 (accès uniquement à Techno 1)
+      else if (req.user.role === 'superadmin1') {
+        const techno1Equipements = await this.equipementModels.techno1.getAllEquipements();
+        result.techno1 = classifyEquipements(techno1Equipements);
+      } 
+      // Pour superadmin2 (accès uniquement à Techno 2)
+      else if (req.user.role === 'superadmin2') {
+        const techno2Equipements = await this.equipementModels.techno2.getAllEquipements();
+        result.techno2 = classifyEquipements(techno2Equipements);
+      }
+
+      res.json(result);
+    } catch (err) {
+      console.error('Erreur lors de la récupération des statistiques d\'équipements par type:', err);
+      res.status(500).json({ message: 'Erreur serveur' });
+    }
+  }
 }
 
 module.exports = EquipementController;

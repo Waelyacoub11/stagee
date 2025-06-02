@@ -19,5 +19,11 @@ router.post(
     "/disponibilite",
     (req, res) => equipementController.getEquipementDisponiblesNonDisponibles(req, res)
   );
+
+// Route pour récupérer les statistiques des équipements par type (imprimantes vs PDA)
+router.post(
+    "/types",
+    (req, res) => equipementController.getEquipementsByType(req, res)
+);
   
 module.exports = router;
