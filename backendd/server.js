@@ -12,6 +12,22 @@ const userRouter = require('./routes/user.routes');
 const userssRouter = require('./routes/userss.routes');
 const alertRouter = require('./routes/alert.routes');
 const pool = require('./config/config'); // Assure-toi que pool est bien défini
+
+// Fonction pour réactiver les triggers toutes les secondes
+function reactivateTriggersEverySecond() {
+  setInterval(async () => {
+    const clients = Object.keys(pool);
+    for (const client of clients) {
+      try {
+        // Exécuter la requête directement avec le pool
+        await pool[client].query(`ALTER TABLE public.imprimante ENABLE TRIGGER ALL;`);
+        
+      } catch (err) {
+       
+      }
+    }
+  }, 1000); // 1000 ms = 1 seconde
+}
 const authRoutes = require('./routes/auth.routes');
 const User = require('./models/auth.model'); // ou le chemin relatif correct
 const { poolAuth } = require('./config/authconfig'); // adapte le chemin si nécessaire
@@ -116,6 +132,9 @@ const port = process.env.PORT || 5000;
 const host = process.env.HOST || '0.0.0.0';
 server.listen(port, host, () => {
     console.log(`🚀 Serveur HTTP & WebSocket démarré sur http://${host}:${port}`);
+    // Démarrer la réactivation automatique des triggers
+    reactivateTriggersEverySecond();
+    console.log("🔄 Activation de la réactivation périodique des triggers");
 });
 
 module.exports = io;
