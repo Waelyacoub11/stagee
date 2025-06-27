@@ -716,7 +716,7 @@ const getAvailabilityClass = (disponibilite) => {
 
 .available {
   background-color: #4CAF50;
-  color: red;
+  color: green;
   padding: 5px 10px;
   border-radius: 4px;
   font-weight: bold;
