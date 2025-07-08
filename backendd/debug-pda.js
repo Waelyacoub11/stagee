@@ -4,9 +4,9 @@ const { Pool } = require('pg');
 // Configuration pour se connecter à la base de données Aurora
 const pool = new Pool({
   user: process.env.DB_USER || 'postgres',
-  host: process.env.DB_HOST || 'techno.cluster-cmb4eeaw4r2x.us-east-1.rds.amazonaws.com',
+  host: process.env.DB_HOST || 'localhost',
   database: process.env.DB_NAME || 'techno',
-  password: process.env.DB_PASSWORD || 'Azazaz123!',
+  password: process.env.DB_PASSWORD || 'azazaz',
   port: process.env.DB_PORT || 5432,
   ssl: { rejectUnauthorized: false }
 });

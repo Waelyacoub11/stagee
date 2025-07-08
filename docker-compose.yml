@@ -16,16 +16,16 @@ services:
       
       # Configuration pour PostgreSQL local
       # Configuration pour la base principale (techno1)
-      DB_HOST: technomaster.cluster-cmb4eeaw4r2x.us-east-1.rds.amazonaws.com
+      DB_HOST: localhost
       DB_USER: postgres
-      DB_PASSWORD: Azazaz123!  # Remplacez par votre mot de passe PostgreSQL local
+      DB_PASSWORD: azazaz  # Remplacez par votre mot de passe PostgreSQL local
       DB_PORT: 5432
       #SSL_ENABLED: "false"
       
       # Configuration pour la base secondaire (techno2)
-      DB2_HOST: technomaster.cluster-cmb4eeaw4r2x.us-east-1.rds.amazonaws.com
+      DB2_HOST: localhost
       DB2_USER: postgres
-      DB2_PASSWORD: Azazaz123!  # Remplacez par votre mot de passe PostgreSQL local
+      DB2_PASSWORD: azazaz  # Remplacez par votre mot de passe PostgreSQL local
       DB2_PORT: 5432
       
       # Nom des bases de données locales
